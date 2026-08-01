@@ -19,6 +19,7 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(SDL2)
+find_package(OpenGL REQUIRED)
 
 add_executable(SDL2-BasePortingFramework)
 target_sources(SDL2-BasePortingFramework
@@ -26,4 +27,7 @@ target_sources(SDL2-BasePortingFramework
         main.cpp
 )
 
-target_link_libraries(SDL2-BasePortingFramework PRIVATE SDL2::SDL2-static)
+target_link_libraries(SDL2-BasePortingFramework 
+    PRIVATE 
+        SDL2::SDL2-static
+        OpenGL::GL)
