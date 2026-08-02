@@ -4,6 +4,12 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#include "core/FrameTimer.h"
+#include "core/FrameStats.h"
+#include <string>
+
+using namespace porting_base;
+
 constexpr const char* WINDOW_NAME = "SDL BasePortingFramework";
 constexpr int WINDOW_SIZE_WIDTH = 480;
 constexpr int WINDOW_SIZE_HEIGHT = 320;
@@ -90,6 +96,12 @@ int main()
         SDL_Log("Warning Set Swap Interval: {%s}", errorMessage);
     }
 
+    FrameTimer Timer { 1.0 / 60.0, 0.25 };
+
+    Uint64 performanceCounter = SDL_GetPerformanceCounter();
+    Uint64 performanceFrequency = SDL_GetPerformanceFrequency();
+    FrameStats Stats;
+
     bool ApplicationRunning { true };
     while (ApplicationRunning)
     {
@@ -118,6 +130,27 @@ int main()
                     break;
                 }
             }
+        }
+
+        const Uint64 now = SDL_GetPerformanceCounter();
+        double FrameSeconds = (now - performanceCounter) / static_cast<double>(performanceFrequency);
+        performanceCounter = now;
+        Stats.Update(FrameSeconds);        
+        if (Stats.GetAccumulatedFrameTimeInSeconds() >= 0.5)
+        {
+            double fps = Stats.GetAverageFPS();
+            double frameMs = Stats.GetAverageFrameTimeInMilliseconds();
+            char title[128];
+            std::snprintf(title, sizeof(title), "%s | %.1f fps / %.2f ms", WINDOW_NAME, fps, frameMs);
+            SDL_SetWindowTitle(Window.get(), title);
+            Stats.Reset();
+        }
+
+        int steps = Timer.Advance(FrameSeconds);
+        while (steps > 0)
+        {
+            // Update game logic here
+            steps--;
         }
 
         glClearColor(0.09f, 0.10f, 0.12f, 1.0f);
