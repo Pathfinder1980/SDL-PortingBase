@@ -41,6 +41,11 @@ namespace porting_base
         state.actions[static_cast<size_t>(action)] = isHeld;
     }
 
+    inline void SetAxisValue(InputState& state, Axis axis, int16_t raw)
+    {
+        state.axes[static_cast<size_t>(axis)] = NormalizeAxis(raw);
+    }
+    
     inline bool IsHeld(const InputState& state, Action action)
     {
         return state.actions[static_cast<size_t>(action)];
@@ -50,6 +55,7 @@ namespace porting_base
     {
         return state.axes[static_cast<size_t>(axis)];
     }
+
 
     inline bool WasPressed(const InputEdges& edges, Action action)
     {

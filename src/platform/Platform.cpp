@@ -27,6 +27,12 @@ namespace porting_base
         };
         using ContextPtr = std::unique_ptr<void, ContextDeleter>;
         
+        struct ControllerDeleter
+        {
+            void operator()(SDL_GameController* controller) const { SDL_GameControllerClose(controller); }
+        };
+        using ControllerPtr = std::unique_ptr<SDL_GameController, ControllerDeleter>;
+
         void SetGLAttribute(SDL_GLattr attr, int value)
         {
             if (SDL_GL_SetAttribute(attr, value))
@@ -39,12 +45,13 @@ namespace porting_base
     
     struct Platform::Impl
     {   
-        SDLGuard Guard;
-        WindowPtr Window;
-        ContextPtr GLContext;
+        SDLGuard guard;
+        WindowPtr window;
+        ContextPtr glContext;
         Uint64 performanceFrequency { 0 };
         InputState inputState {};
-        bool IsQuitRequested { false };
+        ControllerPtr controller;
+        bool isQuitRequested { false };
     };    
 
     Platform::Platform() : pImpl(std::make_unique<Impl>())
@@ -57,7 +64,7 @@ namespace porting_base
     {
         std::unique_ptr<Platform> platform { new Platform() };
         Impl& pImpl = *platform->pImpl;
-        if (SDL_Init(SDL_INIT_VIDEO))
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER))
         {            
             errorMessage = std::format("Error Initializing SDL: {}", SDL_GetError());
             return nullptr;
@@ -73,20 +80,20 @@ namespace porting_base
     #endif
 
         constexpr uint32_t WINDOW_FLAGS = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-        pImpl.Window = WindowPtr {
+        pImpl.window = WindowPtr {
             SDL_CreateWindow(config.WindowName.c_str(), 
                 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
                 config.WindowWidth, config.WindowHeight, 
                 WINDOW_FLAGS) };
 
-        if (pImpl.Window == nullptr)
+        if (pImpl.window == nullptr)
         {
             errorMessage = std::format("Error Create Window: {}", SDL_GetError());
             return nullptr;
         }
 
-        pImpl.GLContext = ContextPtr { SDL_GL_CreateContext(pImpl.Window.get()) };
-        if (pImpl.GLContext == nullptr)
+        pImpl.glContext = ContextPtr { SDL_GL_CreateContext(pImpl.window.get()) };
+        if (pImpl.glContext == nullptr)
         {
             errorMessage = std::format("Error Create GLContext: {}", SDL_GetError());
             return nullptr;
@@ -121,16 +128,38 @@ namespace porting_base
                 {
                     RequestQuit();
                     break;
-                }               
-
+                }
+                
+                case SDL_CONTROLLERDEVICEADDED:
+                {                    
+                    Sint32 deviceID { event.cdevice.which };
+                    pImpl->controller.reset(SDL_GameControllerOpen(deviceID));
+                    pImpl->inputState.controllerConnected = true;
+                    SDL_Log("Controller: Connected!");
+                    break;
+                }
+                
+                case SDL_CONTROLLERDEVICEREMOVED:
+                {                    
+                    if (SDL_GameControllerFromInstanceID(event.cdevice.which) == pImpl->controller.get())
+                    {
+                        pImpl->controller.reset();
+                        pImpl->inputState.controllerConnected = false;
+                        SDL_Log("Controller: Disconnected!");
+                    }                    
+                    break;
+                }
+                    
                 default:
                 {
                     break;
                 }
+
             }
         }
 
-        pImpl->inputState = {};
+        pImpl->inputState.actions = {};
+        pImpl->inputState.axes = {};
         const Uint8* keyboardState = SDL_GetKeyboardState(nullptr);
         for (const KeyBinding& binding : kKeyBindings)
         {
@@ -140,17 +169,34 @@ namespace porting_base
             }
         }
 
+        if (pImpl->inputState.controllerConnected)
+        {
+            for (const PadBinding& padBinding : kPadButtonBindings)
+            {
+                if (SDL_GameControllerGetButton(pImpl->controller.get(), padBinding.button))
+                {
+                    SetHeld(pImpl->inputState, padBinding.action, true);
+                }
+            }
+            
+            Sint16 axisRawX = SDL_GameControllerGetAxis(pImpl->controller.get(), SDL_CONTROLLER_AXIS_LEFTX);
+            SetAxisValue(pImpl->inputState, Axis::MoveX, axisRawX);
+
+            Sint16 axisRawY = SDL_GameControllerGetAxis(pImpl->controller.get(), SDL_CONTROLLER_AXIS_LEFTY);
+            SetAxisValue(pImpl->inputState, Axis::MoveY, axisRawY);
+        }
+
         return pImpl->inputState;
     }
 
     void Platform::SetTitle(const std::string& title)
     {
-        SDL_SetWindowTitle(pImpl->Window.get(), title.c_str());
+        SDL_SetWindowTitle(pImpl->window.get(), title.c_str());
     }
 
     void Platform::SwapBuffers()
     {
-        SDL_GL_SwapWindow(pImpl->Window.get());
+        SDL_GL_SwapWindow(pImpl->window.get());
     }
 
     void Platform::ClearBuffer(float r, float g, float b, float a)
@@ -161,11 +207,11 @@ namespace porting_base
 
     void Platform::RequestQuit()
     {
-        pImpl->IsQuitRequested = true;
+        pImpl->isQuitRequested = true;
     }
 
     bool Platform::IsQuitRequested() const
     {
-        return pImpl->IsQuitRequested;
+        return pImpl->isQuitRequested;
     }
 } // namespace porting_base

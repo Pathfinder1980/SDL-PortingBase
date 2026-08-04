@@ -11,8 +11,8 @@
 
 namespace porting_base{
     constexpr const char* WINDOW_NAME = "SDL BasePortingFramework";
-    constexpr int WINDOW_SIZE_WIDTH = 480;
-    constexpr int WINDOW_SIZE_HEIGHT = 320;
+    constexpr int WINDOW_SIZE_WIDTH = 640 ;
+    constexpr int WINDOW_SIZE_HEIGHT = 480;
     
     int AppMain(int argc, char** argv)
     {
@@ -39,24 +39,45 @@ namespace porting_base{
             previousInputState = currentInputState;
 
             double nowSeconds = platform->Now();
-            double FrameSeconds = nowSeconds - lastTime;
+            double frameSeconds = nowSeconds - lastTime;
             lastTime = nowSeconds;
-            stats.Update(FrameSeconds);        
+            stats.Update(frameSeconds);        
             if (stats.GetAccumulatedFrameTimeInSeconds() >= 0.5)
             {
                 double fps = stats.GetAverageFPS();
                 double frameMs = stats.GetAverageFrameTimeInMilliseconds();
+
                 char title[128];
-                std::snprintf(title, sizeof(title), "%s | %.1f fps / %.2f ms", WINDOW_NAME, fps, frameMs);
+                std::snprintf(title, sizeof(title), "%s | %.1f fps / %.2f ms | Controller: %i | (%.2f, %.2f)", 
+                    WINDOW_NAME, fps, frameMs, 
+                    currentInputState.controllerConnected, 
+                    currentInputState.axes[static_cast<int>(Axis::MoveX)],
+                    currentInputState.axes[static_cast<int>(Axis::MoveY)]);
                 platform->SetTitle(title);
                 stats.Reset();
             }
             
-            int steps = timer.Advance(FrameSeconds);
+            int steps = timer.Advance(frameSeconds);
             while (steps > 0)
             {
                 // Update game logic here
                 steps--;
+            }
+
+            if (currentInputState.controllerConnected)
+            {
+                float axisX = currentInputState.axes[static_cast<int>(Axis::MoveX)];
+                float axisY = -currentInputState.axes[static_cast<int>(Axis::MoveY)];
+                const float dt = static_cast<float>(frameSeconds);
+                red += axisY * dt;
+                green += axisY * dt;
+                blue += axisY * dt;
+
+                green += axisX * dt;
+
+                red = std::clamp(red, 0.f, 1.f);
+                green = std::clamp(green, 0.f, 1.f);
+                blue = std::clamp(blue, 0.f, 1.f);
             }
             
             if (WasPressed(inputEdges, Action::Highlight))
