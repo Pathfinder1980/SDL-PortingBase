@@ -34,4 +34,10 @@ TEST(InputState, InputStateComputeEdges)
     edges = ComputeInputEdges(previous, current);
     EXPECT_FALSE(edges.pressed[static_cast<size_t>(Action::Highlight)]);
     EXPECT_TRUE(edges.released[static_cast<size_t>(Action::Highlight)]);
+
+    previous.actions[static_cast<size_t>(Action::Highlight)] = true;
+    current.actions[static_cast<size_t>(Action::Highlight)] = true;
+    edges = ComputeInputEdges(previous, current);
+    EXPECT_FALSE(edges.pressed[static_cast<size_t>(Action::Highlight)]);
+    EXPECT_FALSE(edges.released[static_cast<size_t>(Action::Highlight)]);
 }
