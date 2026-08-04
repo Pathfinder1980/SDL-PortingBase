@@ -29,8 +29,7 @@ namespace porting_base{
         FrameStats stats;    
         while (platform->IsQuitRequested() == false)
         {
-            platform->PumpEvents();
-            
+            platform->PumpEvents();            
             
             double nowSeconds = platform->Now();
             double FrameSeconds = nowSeconds - lastTime;

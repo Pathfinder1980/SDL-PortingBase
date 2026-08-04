@@ -11,6 +11,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(core_test
     FrameTimerTest.cpp
     FrameStatsTest.cpp
+    InputStateTest.cpp
 )
 
 target_link_libraries(core_test
