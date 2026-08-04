@@ -18,6 +18,7 @@ target_link_libraries(core_test
     PRIVATE
         core
         GTest::gtest_main
+        warnings
 )
 
 include(GoogleTest)

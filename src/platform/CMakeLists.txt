@@ -24,4 +24,5 @@ target_link_libraries(platform
     PRIVATE
         SDL2::SDL2-static
         OpenGL::GL
+        warnings
 )
