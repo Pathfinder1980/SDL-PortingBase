@@ -2,10 +2,12 @@
 
 #include "core/FrameTimer.h"
 #include "core/FrameStats.h"
+#include "core/InputState.h"
 #include "platform/Platform.h"
 #include <string>
 
 #include "core/AppEntry.h"
+#include <random>
 
 namespace porting_base{
     constexpr const char* WINDOW_NAME = "SDL BasePortingFramework";
@@ -23,14 +25,19 @@ namespace porting_base{
             return 1;
         }
         
+        std::mt19937 rng { std::random_device { }() };
+        float red { 0.09f }, green { 0.10f }, blue { 0.12f};
         FrameTimer timer { 1.0 / 60.0, 0.25 };
         
         double lastTime = platform->Now();
-        FrameStats stats;    
+        FrameStats stats;
+        InputState previousInputState;
         while (platform->IsQuitRequested() == false)
         {
-            platform->PumpEvents();            
-            
+            const InputState& currentInputState = platform->PumpEvents();
+            const InputEdges inputEdges = ComputeInputEdges(previousInputState, currentInputState);
+            previousInputState = currentInputState;
+
             double nowSeconds = platform->Now();
             double FrameSeconds = nowSeconds - lastTime;
             lastTime = nowSeconds;
@@ -52,7 +59,20 @@ namespace porting_base{
                 steps--;
             }
             
-            platform->ClearBuffer(0.09f, 0.10f, 0.12f, 1.0f);
+            if (WasPressed(inputEdges, Action::Highlight))
+            {
+                std::uniform_real_distribution<float> dist { 0.f, 1.f };
+                red = dist(rng);
+                green = dist(rng);
+                blue = dist(rng);
+            }
+
+            if (WasPressed(inputEdges, Action::Quit))
+            {
+                platform->RequestQuit();
+            }
+
+            platform->ClearBuffer(red, green, blue, 1.0f);
             platform->SwapBuffers();
         }
         

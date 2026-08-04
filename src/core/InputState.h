@@ -36,6 +36,11 @@ namespace porting_base
     InputEdges ComputeInputEdges(const InputState& previous, const InputState& current);
     float NormalizeAxis(int16_t raw, float deadzone = 0.24f);
 
+    inline void SetHeld(InputState& state, Action action, bool isHeld)
+    {
+        state.actions[static_cast<size_t>(action)] = isHeld;
+    }
+
     inline bool IsHeld(const InputState& state, Action action)
     {
         return state.actions[static_cast<size_t>(action)];

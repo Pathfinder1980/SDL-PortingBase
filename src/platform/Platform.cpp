@@ -4,6 +4,8 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#include "InputBindings.h"
+
 namespace porting_base
 {
     namespace
@@ -41,6 +43,7 @@ namespace porting_base
         WindowPtr Window;
         ContextPtr GLContext;
         Uint64 performanceFrequency { 0 };
+        InputState inputState {};
         bool IsQuitRequested { false };
     };    
 
@@ -107,7 +110,7 @@ namespace porting_base
         return FrameSeconds;
     }
 
-    void Platform::PumpEvents()
+    const InputState& Platform::PumpEvents()
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -118,16 +121,7 @@ namespace porting_base
                 {
                     pImpl->IsQuitRequested = true;
                     break;
-                }
-
-                case SDL_KEYDOWN:
-                {
-                    if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-                    {
-                        pImpl->IsQuitRequested = true;
-                    }
-                    break;
-                }
+                }               
 
                 default:
                 {
@@ -135,6 +129,21 @@ namespace porting_base
                 }
             }
         }
+
+        for (int i = 0; i < static_cast<int>(Action::Count); ++i)
+        {
+            pImpl->inputState.actions[i] = false;
+        }
+        const Uint8* keyboardState = SDL_GetKeyboardState(nullptr);
+        for (const KeyBinding& binding : kKeyBindings)
+        {
+            if (keyboardState[binding.scancode])
+            {
+                SetHeld(pImpl->inputState, binding.action, true);
+            }
+        }
+
+        return pImpl->inputState;
     }
 
     void Platform::SetTitle(const std::string& title)
@@ -151,6 +160,11 @@ namespace porting_base
     {
         glClearColor(r, g, b, a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    void Platform::RequestQuit()
+    {
+        pImpl->IsQuitRequested = true;
     }
 
     bool Platform::IsQuitRequested() const

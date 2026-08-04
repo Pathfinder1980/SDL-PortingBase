@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#include "core/InputState.h"
+
 namespace porting_base
 {
     struct WindowConfig
@@ -21,12 +23,13 @@ namespace porting_base
         static std::unique_ptr<Platform> Create(const WindowConfig& config, std::string& errorMessage);
 
         double Now() const;
-        void PumpEvents();
+        const InputState& PumpEvents();
 
         void SetTitle(const std::string& title);
         void SwapBuffers();
         void ClearBuffer(float r, float g, float b, float a);
 
+        void RequestQuit();
         bool IsQuitRequested() const;
 
     private:
