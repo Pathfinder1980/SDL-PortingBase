@@ -119,7 +119,7 @@ namespace porting_base
             {
                 case SDL_QUIT:
                 {
-                    pImpl->IsQuitRequested = true;
+                    RequestQuit();
                     break;
                 }               
 
@@ -130,10 +130,7 @@ namespace porting_base
             }
         }
 
-        for (int i = 0; i < static_cast<int>(Action::Count); ++i)
-        {
-            pImpl->inputState.actions[i] = false;
-        }
+        pImpl->inputState = {};
         const Uint8* keyboardState = SDL_GetKeyboardState(nullptr);
         for (const KeyBinding& binding : kKeyBindings)
         {
