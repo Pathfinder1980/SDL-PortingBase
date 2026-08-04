@@ -13,6 +13,7 @@ else()
 endif()
 
 add_subdirectory(src/core)
+add_subdirectory(src/renderer)
 add_subdirectory(src/platform)
 add_subdirectory(src/app)
 
