@@ -22,8 +22,36 @@ namespace porting_base
         PB_GL_LOAD(Viewport);
         PB_GL_LOAD(GetString);
 
+        PB_GL_LOAD(GenVertexArrays);
+        PB_GL_LOAD(BindVertexArray);
+        PB_GL_LOAD(GenBuffers); 
+        PB_GL_LOAD(BindBuffer);
+        PB_GL_LOAD(BufferData);
+        PB_GL_LOAD(EnableVertexAttribArray);
+        PB_GL_LOAD(VertexAttribPointer);
+        PB_GL_LOAD(DrawArrays);
+        PB_GL_LOAD(CreateShader);
+        PB_GL_LOAD(ShaderSource);
+            
+        PB_GL_LOAD(CompileShader);
+        PB_GL_LOAD(GetShaderiv);
+        PB_GL_LOAD(GetShaderInfoLog);
+        PB_GL_LOAD(DeleteShader);
+        PB_GL_LOAD(CreateProgram);
+        PB_GL_LOAD(AttachShader);
+        PB_GL_LOAD(LinkProgram);
+        PB_GL_LOAD(GetProgramiv);
+        PB_GL_LOAD(GetProgramInfoLog);
+        PB_GL_LOAD(UseProgram);
+        PB_GL_LOAD(DeleteProgram);
+
+        PB_GL_LOAD(DeleteVertexArrays);
+        PB_GL_LOAD(DeleteBuffers);
+
+        PB_GL_LOAD(GetError);
+
         return true;
     }
 
-    #undef PB_GL_LOAD(name)
+    #undef PB_GL_LOAD
 }

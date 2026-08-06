@@ -15,7 +15,7 @@ namespace porting_base{
     constexpr int WINDOW_SIZE_WIDTH = 640 ;
     constexpr int WINDOW_SIZE_HEIGHT = 480;
     
-    int AppMain(int argc, char** argv)
+    int AppMain([[maybe_unused]]int argc, [[maybe_unused]]char** argv)
     {
         WindowConfig config { WINDOW_NAME, WINDOW_SIZE_WIDTH, WINDOW_SIZE_HEIGHT, true };
         std::string errorMessage;
@@ -104,6 +104,7 @@ namespace porting_base{
 
 
             renderer->Clear(red, green, blue, 1.f);
+            renderer->Draw();
             platform->SwapBuffers();
         }
         
