@@ -15,6 +15,8 @@ namespace porting_base
         bool VSync;
     };
 
+    using GlGetProc = void* (*)(const char*);
+
     class Platform
     {
     public:
@@ -22,12 +24,13 @@ namespace porting_base
 
         static std::unique_ptr<Platform> Create(const WindowConfig& config, std::string& errorMessage);
 
+        GlGetProc GetGLLoader();
+
         double Now() const;
         const InputState& PumpEvents();
 
         void SetTitle(const std::string& title);
         void SwapBuffers();
-        void ClearBuffer(float r, float g, float b, float a);
 
         void RequestQuit();
         bool IsQuitRequested() const;

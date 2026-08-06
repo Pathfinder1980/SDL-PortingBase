@@ -2,7 +2,6 @@
 
 #include <format>
 #include <SDL.h>
-#include <SDL_opengl.h>
 
 #include "InputBindings.h"
 
@@ -98,7 +97,7 @@ namespace porting_base
             errorMessage = std::format("Error Create GLContext: {}", SDL_GetError());
             return nullptr;
         }
-        SDL_Log("OpenGL: %s", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+        
         
         if (SDL_GL_SetSwapInterval(config.VSync ? 1 : 0) != 0)
         {
@@ -108,6 +107,11 @@ namespace porting_base
         pImpl.performanceFrequency = SDL_GetPerformanceFrequency();
         
         return platform;
+    }
+
+    GlGetProc Platform::GetGLLoader()
+    {
+        return reinterpret_cast<GlGetProc>(&SDL_GL_GetProcAddress);   
     }
 
     double Platform::Now() const
@@ -197,13 +201,7 @@ namespace porting_base
     void Platform::SwapBuffers()
     {
         SDL_GL_SwapWindow(pImpl->window.get());
-    }
-
-    void Platform::ClearBuffer(float r, float g, float b, float a)
-    {
-        glClearColor(r, g, b, a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
+    }    
 
     void Platform::RequestQuit()
     {

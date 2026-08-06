@@ -1,5 +1,6 @@
 add_library(renderer STATIC
     Renderer.cpp
+    GLApi.cpp
 )
 
 target_include_directories(renderer

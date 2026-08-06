@@ -16,13 +16,10 @@ add_library(platform STATIC
     Entry.cpp
 )
 
-find_package(OpenGL REQUIRED)
-
 target_link_libraries(platform
     PUBLIC
         core
     PRIVATE
         SDL2::SDL2-static
-        OpenGL::GL
         warnings
 )

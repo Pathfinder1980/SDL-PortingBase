@@ -4,6 +4,7 @@
 #include "core/FrameStats.h"
 #include "core/InputState.h"
 #include "platform/Platform.h"
+#include "renderer/Renderer.h"
 #include <string>
 
 #include "core/AppEntry.h"
@@ -24,6 +25,14 @@ namespace porting_base{
             std::fprintf(stderr, "%s\n", errorMessage.c_str());
             return 1;
         }
+
+        auto renderer = Renderer::Create(platform->GetGLLoader(), errorMessage);
+        if (!renderer)
+        {
+            std::fprintf(stderr, "%s\n", errorMessage.c_str());
+            return 1;
+        }
+        std::printf("OpenGL: %s\n", renderer->GetVersionString().c_str());
         
         std::mt19937 rng { std::random_device { }() };
         float red { 0.09f }, green { 0.10f }, blue { 0.12f};
@@ -93,7 +102,8 @@ namespace porting_base{
                 platform->RequestQuit();
             }
 
-            platform->ClearBuffer(red, green, blue, 1.0f);
+
+            renderer->Clear(red, green, blue, 1.f);
             platform->SwapBuffers();
         }
         

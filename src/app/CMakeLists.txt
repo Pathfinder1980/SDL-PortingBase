@@ -4,6 +4,7 @@ add_executable(SDL2-PortingBase
 
 target_link_libraries(SDL2-PortingBase
     PRIVATE
+        renderer
         platform
         core
         warnings
