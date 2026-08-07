@@ -51,6 +51,7 @@ namespace porting_base
         InputState inputState {};
         ControllerPtr controller;
         bool isQuitRequested { false };
+        std::string basePath {};
     };    
 
     Platform::Platform() : pImpl(std::make_unique<Impl>())
@@ -211,5 +212,25 @@ namespace porting_base
     bool Platform::IsQuitRequested() const
     {
         return pImpl->isQuitRequested;
+    }
+
+    const std::string& Platform::GetBasePath(std::string& errorMessage) const
+    {
+        if (!pImpl->basePath.empty())
+        {
+            return pImpl->basePath;
+        }
+
+        char* basePath = SDL_GetBasePath();
+        if (basePath)
+        {
+            pImpl->basePath = basePath;
+            SDL_free(basePath);
+        }
+        else
+        {
+            errorMessage = std::format("Error GetBasePath: {}", SDL_GetError());
+        }
+        return pImpl->basePath;
     }
 } // namespace porting_base

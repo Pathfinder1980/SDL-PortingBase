@@ -1,22 +1,11 @@
 #include "Renderer.h"
 #include <format>
+#include <fstream>
+#include <sstream>
 
 
 namespace porting_base
 {
-    namespace 
-    {
-        constexpr const char* kVertexShaderSource = R"(#version 330 core
-        layout(location = 0) in vec2 aPosition;
-        void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
-        )";
-
-        constexpr const char* kFragmentShaderSource = R"(#version 330 core
-        out vec4 fragColor;
-        void main() { fragColor = vec4(1.0, 0.55, 0.25, 1.0); }
-        )";
-    }
-
     Renderer::~Renderer()
     {
         if (m_Vbo != 0)
@@ -34,7 +23,7 @@ namespace porting_base
         }
     }
 
-    std::unique_ptr<Renderer> Renderer::Create(GLApi::GetProcFn getProc, std::string &errorMessage)
+    std::unique_ptr<Renderer> Renderer::Create(GLApi::GetProcFn getProc, const std::filesystem::path& shaderPath, std::string& errorMessage)
     {
         std::unique_ptr<Renderer> renderer { new Renderer() };
         
@@ -46,9 +35,9 @@ namespace porting_base
         }
         
         const GLubyte* version = renderer->m_GLApi.GetString(GL_VERSION);
-        renderer->m_VersionString = version ? reinterpret_cast<const char*>(version) : "unknown";
+        renderer->m_VersionString = version ? reinterpret_cast<const char*>(version) : "unknown";        
 
-        if (!renderer->InitShaderProgram(errorMessage))
+        if (!renderer->InitShaderProgram(shaderPath, errorMessage))
         {
             return nullptr;
         }
@@ -78,35 +67,29 @@ namespace porting_base
         m_GLApi.DrawArrays(GL_TRIANGLES, 0, 3);
     }
 
-    GLuint Renderer::CompileStage(GLenum type, const char *source, std::string &outError)
-    {
-        GLuint id = m_GLApi.CreateShader(type);
-        m_GLApi.ShaderSource(id, 1, &source, nullptr);
-        m_GLApi.CompileShader(id);
+    
 
-        GLint status;
-        m_GLApi.GetShaderiv(id, GL_COMPILE_STATUS, &status);
-        if (status == 0)
+    bool Renderer::InitShaderProgram(const std::filesystem::path& shaderPath, std::string& outError)
+    {
+        std::string vertexShaderLabel = "triangle.vert";
+        std::string vertexShaderSource = LoadShaderSourceFile(vertexShaderLabel, shaderPath, outError);
+        if (vertexShaderSource.empty())
         {
-            char log[1024]; 
-            GLsizei len = 0; 
-            m_GLApi.GetShaderInfoLog(id, sizeof(log), &len, log);
-            outError = std::format("Shader compile failed: {}", log);
-            m_GLApi.DeleteShader(id);
-            return 0;
+            return false;
         }
-
-        return id;
-    }
-    bool Renderer::InitShaderProgram(std::string &outError)
-    {
-        GLuint vertexShaderId = CompileStage(GL_VERTEX_SHADER, kVertexShaderSource, outError);
+        GLuint vertexShaderId = CompileStage(GL_VERTEX_SHADER, vertexShaderSource.c_str(), vertexShaderLabel, outError);
         if (vertexShaderId == 0)
         {
             return false;
         }
 
-        GLuint fragmentId = CompileStage(GL_FRAGMENT_SHADER, kFragmentShaderSource, outError);
+        std::string fragmentShaderLabel = "triangle.frag";
+        std::string fragmentShaderSource = LoadShaderSourceFile(fragmentShaderLabel, shaderPath, outError);
+        if (fragmentShaderSource.empty())
+        {
+            return false;
+        }
+        GLuint fragmentId = CompileStage(GL_FRAGMENT_SHADER, fragmentShaderSource.c_str(), fragmentShaderLabel, outError);
         if (fragmentId == 0)
         {
             m_GLApi.DeleteShader(vertexShaderId);
@@ -140,7 +123,43 @@ namespace porting_base
         return true;
     }
 
-    bool Renderer::InitGeometry(std::string &outError)
+    std::string Renderer::LoadShaderSourceFile(const std::string& fileName, const std::filesystem::path& shaderPath, std::string& outError)
+    {
+        std::filesystem::path fullPath = shaderPath / fileName;
+        std::ifstream filePathStream(fullPath, std::ios::binary);
+        if (!filePathStream)
+        {
+            outError = std::format("Failed to open shader file: {}", fullPath.string());
+            return {};
+        }
+
+        std::ostringstream contents;
+        contents << filePathStream.rdbuf();
+        return contents.str();
+    }
+
+    GLuint Renderer::CompileStage(GLenum type, const char* source, const std::string& label, std::string& outError)
+    {
+        GLuint id = m_GLApi.CreateShader(type);
+        m_GLApi.ShaderSource(id, 1, &source, nullptr);
+        m_GLApi.CompileShader(id);
+
+        GLint status;
+        m_GLApi.GetShaderiv(id, GL_COMPILE_STATUS, &status);
+        if (status == 0)
+        {
+            char log[1024]; 
+            GLsizei len = 0; 
+            m_GLApi.GetShaderInfoLog(id, sizeof(log), &len, log);
+            outError = std::format("{} compile failed: {}", label, log);
+            m_GLApi.DeleteShader(id);
+            return 0;
+        }
+
+        return id;
+    }
+
+    bool Renderer::InitGeometry(std::string& outError)
     {
         constexpr float vertices[] = {
             -0.5f, -0.5f,

@@ -35,6 +35,8 @@ namespace porting_base
         void RequestQuit();
         bool IsQuitRequested() const;
 
+        const std::string& GetBasePath(std::string& errorMessage) const;
+
     private:
         Platform();
 

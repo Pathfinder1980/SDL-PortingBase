@@ -3,12 +3,14 @@
 #include "core/FrameTimer.h"
 #include "core/FrameStats.h"
 #include "core/InputState.h"
+#include "core/AppEntry.h"
 #include "platform/Platform.h"
 #include "renderer/Renderer.h"
-#include <string>
 
-#include "core/AppEntry.h"
+#include <string>
 #include <random>
+#include <filesystem>
+
 
 namespace porting_base{
     constexpr const char* WINDOW_NAME = "SDL BasePortingFramework";
@@ -26,7 +28,15 @@ namespace porting_base{
             return 1;
         }
 
-        auto renderer = Renderer::Create(platform->GetGLLoader(), errorMessage);
+        const std::string& basePath = platform->GetBasePath(errorMessage);
+        if (basePath.empty())
+        {
+            std::fprintf(stderr, "%s\n", errorMessage.c_str());
+            return 1;
+        }
+        std::filesystem::path shaderPath = std::filesystem::path(basePath) / "assets" / "shaders";        
+
+        auto renderer = Renderer::Create(platform->GetGLLoader(), shaderPath, errorMessage);
         if (!renderer)
         {
             std::fprintf(stderr, "%s\n", errorMessage.c_str());
