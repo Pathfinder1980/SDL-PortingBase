@@ -65,14 +65,9 @@ namespace porting_base{
             {
                 double fps = stats.GetAverageFPS();
                 double frameMs = stats.GetAverageFrameTimeInMilliseconds();
-
-                char title[128];
-                std::snprintf(title, sizeof(title), "%s | %.1f fps / %.2f ms | Controller: %i | (%.2f, %.2f)", 
-                    WINDOW_NAME, fps, frameMs, 
-                    currentInputState.controllerConnected, 
-                    currentInputState.axes[static_cast<int>(Axis::MoveX)],
-                    currentInputState.axes[static_cast<int>(Axis::MoveY)]);
-                platform->SetTitle(title);
+                float xAxis = currentInputState.axes[static_cast<int>(Axis::MoveX)];
+                float yAxis = currentInputState.axes[static_cast<int>(Axis::MoveY)];
+                platform->SetTitle(std::format("{} | {:.1f} fps / {:.2f} ms | Controller: {} , | ({:.2f}, {:.2f})" , WINDOW_NAME, fps, frameMs, currentInputState.controllerConnected, xAxis, yAxis));
                 stats.Reset();
             }
             
