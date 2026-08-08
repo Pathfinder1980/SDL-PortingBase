@@ -37,6 +37,10 @@ namespace porting_base
     inline constexpr GLbitfield GL_DEPTH_BUFFER_BIT = 0x00000100;
     inline constexpr GLenum     GL_VERSION          = 0x1F02;
 
+    inline constexpr GLenum GL_DEPTH_TEST           = 0x0B71;
+    inline constexpr GLenum GL_UNSIGNED_SHORT       = 0x1403;
+    inline constexpr GLenum GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+
     
     struct GLApi
     {
@@ -77,6 +81,11 @@ namespace porting_base
 
         void (PB_GL_CALL* DeleteVertexArrays)(GLsizei n, const GLuint* arrays) = nullptr;
         void (PB_GL_CALL* DeleteBuffers)(GLsizei n, const GLuint* buffers) = nullptr;
+
+        void  (PB_GL_CALL* Enable)(GLenum cap) = nullptr;
+        void  (PB_GL_CALL* DrawElements)(GLenum mode, GLsizei count, GLenum type, const void* indices) = nullptr;
+        GLint (PB_GL_CALL* GetUniformLocation)(GLuint program, const GLchar* name) = nullptr;
+        void  (PB_GL_CALL* UniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value) = nullptr;
 
         GLenum (PB_GL_CALL* GetError)() = nullptr;
     };

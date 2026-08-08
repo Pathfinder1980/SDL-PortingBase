@@ -12,6 +12,7 @@ add_executable(core_test
     FrameTimerTest.cpp
     FrameStatsTest.cpp
     InputStateTest.cpp
+    MathTest.cpp
 )
 
 target_link_libraries(core_test

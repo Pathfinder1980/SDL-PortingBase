@@ -47,6 +47,11 @@ namespace porting_base
 
         PB_GL_LOAD(DeleteVertexArrays);
         PB_GL_LOAD(DeleteBuffers);
+        
+        PB_GL_LOAD(Enable);
+        PB_GL_LOAD(DrawElements);
+        PB_GL_LOAD(GetUniformLocation);
+        PB_GL_LOAD(UniformMatrix4fv);
 
         PB_GL_LOAD(GetError);
 
