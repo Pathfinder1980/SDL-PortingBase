@@ -2,12 +2,63 @@
 #include <format>
 #include <fstream>
 #include <sstream>
+#include <iterator>
 
 
 namespace porting_base
 {
+    namespace 
+    {
+        constexpr float kCubeVertices[] = {
+            // +Z
+            -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 1.0f,
+            // -Z
+             0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 1.0f,
+            // +X
+             0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
+            // -X
+            -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
+            // +Y
+            -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 1.0f,
+            // -Y
+            -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 1.0f,
+        };
+
+        constexpr unsigned short kCubeIndices[] = {
+            0,  1,  2,   0,  2,  3,
+            4,  5,  6,   4,  6,  7,
+            8,  9, 10,   8, 10, 11,
+            12, 13, 14,  12, 14, 15,
+            16, 17, 18,  16, 18, 19,
+            20, 21, 22,  20, 22, 23,
+        };
+    }
+
+
     Renderer::~Renderer()
     {
+        if (m_Ebo != 0)
+        {
+            m_GLApi.DeleteBuffers(1, &m_Ebo);
+        }
         if (m_Vbo != 0)
         {
             m_GLApi.DeleteBuffers(1, &m_Vbo);
@@ -35,7 +86,9 @@ namespace porting_base
         }
         
         const GLubyte* version = renderer->m_GLApi.GetString(GL_VERSION);
-        renderer->m_VersionString = version ? reinterpret_cast<const char*>(version) : "unknown";        
+        renderer->m_VersionString = version ? reinterpret_cast<const char*>(version) : "unknown";
+        
+        renderer->m_GLApi.Enable(GL_DEPTH_TEST);
 
         if (!renderer->InitShaderProgram(shaderPath, errorMessage))
         {
@@ -64,7 +117,7 @@ namespace porting_base
     {
         m_GLApi.UseProgram(m_Program);
         m_GLApi.BindVertexArray(m_Vao);
-        m_GLApi.DrawArrays(GL_TRIANGLES, 0, 3);
+        m_GLApi.DrawElements(GL_TRIANGLES, static_cast<GLsizei>(std::size(kCubeIndices)), GL_UNSIGNED_SHORT, nullptr);
     }
 
     
@@ -161,21 +214,19 @@ namespace porting_base
 
     bool Renderer::InitGeometry(std::string& outError)
     {
-        constexpr float vertices[] = {
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            0.0f,  0.5f,
-        };
-
         m_GLApi.GenVertexArrays(1, &m_Vao);
         m_GLApi.BindVertexArray(m_Vao);
 
         m_GLApi.GenBuffers(1, &m_Vbo);
         m_GLApi.BindBuffer(GL_ARRAY_BUFFER, m_Vbo);
-        m_GLApi.BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        m_GLApi.BufferData(GL_ARRAY_BUFFER, sizeof(kCubeVertices), kCubeVertices, GL_STATIC_DRAW);
+
+        m_GLApi.GenBuffers(1, &m_Ebo);
+        m_GLApi.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ebo);
+        m_GLApi.BufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(kCubeIndices), kCubeIndices, GL_STATIC_DRAW);
 
         m_GLApi.EnableVertexAttribArray(0);
-        m_GLApi.VertexAttribPointer(0, 2, GL_FLOAT, 0, 2 * sizeof(float), nullptr);
+        m_GLApi.VertexAttribPointer(0, 3, GL_FLOAT, 0, 8 * sizeof(float), nullptr);
 
         const GLenum error = m_GLApi.GetError();
         if (error != 0)

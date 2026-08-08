@@ -34,6 +34,7 @@ namespace porting_base
         GLuint m_Program { 0 };
         GLuint m_Vao { 0 };
         GLuint m_Vbo { 0 };
+        GLuint m_Ebo { 0 };
 
         GLApi m_GLApi;
     };
