@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
 
-uniform mat4 uM4444VP;
+uniform mat4 uMVP;
 
 out vec3 vColor;
         
