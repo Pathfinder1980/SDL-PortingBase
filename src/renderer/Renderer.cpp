@@ -6,6 +6,9 @@
 #include <array>
 #include <cstdint>
 #include <numbers>
+#include <cstdio>
+#include <string_view>
+
 
 #include "renderer/Math.h"
 
@@ -78,6 +81,21 @@ namespace porting_base
         }
 
         constexpr std::array<std::uint8_t, 8 * 8 * 4> kCheckTexture { MakeCheckerTexture() };
+
+        void PB_GL_CALL DebugCallback([[maybe_unused]]GLenum source, [[maybe_unused]]GLenum type, [[maybe_unused]]GLuint id, GLenum severity, 
+            [[maybe_unused]]GLsizei length, const GLchar* message, [[maybe_unused]]const void* userParam)
+        {
+            if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+            {
+                return;
+            }
+            std::fprintf(stderr, "[GL] %s\n", message);
+
+            if (severity == GL_DEBUG_SEVERITY_HIGH)
+            {
+                PB_DEBUG_BREAK();
+            }
+        }
     }
 
 
@@ -120,6 +138,28 @@ namespace porting_base
         
         const GLubyte* version = renderer->m_GLApi.GetString(GL_VERSION);
         renderer->m_VersionString = version ? reinterpret_cast<const char*>(version) : "unknown";
+
+#ifndef NDEBUG
+        GLint extensionCount = 0;
+        renderer->m_GLApi.GetIntegerv(GL_NUM_EXTENSIONS, &extensionCount);
+        bool hasKhrDebug = false;
+        for (GLint i = 0; i < extensionCount; ++i)
+        {
+            const GLubyte* ext = renderer->m_GLApi.GetStringi(GL_EXTENSIONS, static_cast<GLuint>(i));
+            if (ext != nullptr && std::string_view { reinterpret_cast<const char*>(ext) } == "GL_KHR_debug")
+            {
+                hasKhrDebug = true;
+                break;
+            }
+        }
+        if (hasKhrDebug && renderer->m_GLApi.DebugMessageCallback != nullptr)
+        {
+            renderer->m_GLApi.Enable(GL_DEBUG_OUTPUT);
+            renderer->m_GLApi.Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            renderer->m_GLApi.DebugMessageCallback(&DebugCallback, nullptr);
+        }
+#endif
+
         
         renderer->m_GLApi.Enable(GL_DEPTH_TEST);
 

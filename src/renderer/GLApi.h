@@ -9,6 +9,15 @@
     #define PB_GL_CALL
 #endif
 
+#if defined(_MSC_VER)
+    #define PB_DEBUG_BREAK() __debugbreak()
+#elif defined(__clang__)
+    #define PB_DEBUG_BREAK() __builtin_debugtrap()
+#else
+    #include <csignal>
+    #define PB_DEBUG_BREAK() raise(SIGTRAP)
+#endif
+
 
 namespace porting_base
 {
@@ -41,19 +50,27 @@ namespace porting_base
     inline constexpr GLenum GL_UNSIGNED_SHORT       = 0x1403;
     inline constexpr GLenum GL_ELEMENT_ARRAY_BUFFER = 0x8893;
 
-    inline constexpr GLenum GL_TEXTURE_2D                = 0x0DE1;
-    inline constexpr GLenum GL_TEXTURE0                  = 0x84C0;
-    inline constexpr GLenum GL_RGBA                      = 0x1908;
-    inline constexpr GLint  GL_RGBA8                     = 0x8058;
-    inline constexpr GLenum GL_UNSIGNED_BYTE             = 0x1401;
-    inline constexpr GLenum GL_TEXTURE_MAG_FILTER        = 0x2800;
-    inline constexpr GLenum GL_TEXTURE_MIN_FILTER        = 0x2801;
-    inline constexpr GLint  GL_NEAREST                   = 0x2600;
-    inline constexpr GLint  GL_NEAREST_MIPMAP_LINEAR     = 0x2702;
-    inline constexpr GLenum GL_TEXTURE_WRAP_S            = 0x2802;
-    inline constexpr GLenum GL_TEXTURE_WRAP_T            = 0x2803;
-    inline constexpr GLint  GL_REPEAT                    = 0x2901;
-    inline constexpr GLenum GL_UNPACK_ALIGNMENT          = 0x0CF5;
+    inline constexpr GLenum GL_TEXTURE_2D               = 0x0DE1;
+    inline constexpr GLenum GL_TEXTURE0                 = 0x84C0;
+    inline constexpr GLenum GL_RGBA                     = 0x1908;
+    inline constexpr GLint  GL_RGBA8                    = 0x8058;
+    inline constexpr GLenum GL_UNSIGNED_BYTE            = 0x1401;
+    inline constexpr GLenum GL_TEXTURE_MAG_FILTER       = 0x2800;
+    inline constexpr GLenum GL_TEXTURE_MIN_FILTER       = 0x2801;
+    inline constexpr GLint  GL_NEAREST                  = 0x2600;
+    inline constexpr GLint  GL_NEAREST_MIPMAP_LINEAR    = 0x2702;
+    inline constexpr GLenum GL_TEXTURE_WRAP_S           = 0x2802;
+    inline constexpr GLenum GL_TEXTURE_WRAP_T           = 0x2803;
+    inline constexpr GLint  GL_REPEAT                   = 0x2901;
+    inline constexpr GLenum GL_UNPACK_ALIGNMENT         = 0x0CF5;
+
+    inline constexpr GLenum GL_DEBUG_OUTPUT                 = 0x92E0;
+    inline constexpr GLenum GL_DEBUG_OUTPUT_SYNCHRONOUS     = 0x8242;
+    inline constexpr GLenum GL_DEBUG_SEVERITY_NOTIFICATION  = 0x826B;
+    inline constexpr GLenum GL_DEBUG_SEVERITY_HIGH          = 0x9146;
+
+    inline constexpr GLenum GL_NUM_EXTENSIONS               = 0x821D;
+    inline constexpr GLenum GL_EXTENSIONS                   = 0x1F03;
 
     
     struct GLApi
@@ -114,5 +131,12 @@ namespace porting_base
         void (PB_GL_CALL* PixelStorei)(GLenum pname, GLint param) = nullptr;
 
         GLenum (PB_GL_CALL* GetError)() = nullptr;
+
+        using GLDebugProc = void (PB_GL_CALL*)(GLenum source, GLenum type, GLuint id, 
+            GLenum severity, GLsizei length, 
+            const GLchar* message, const void* userParam);
+        void (PB_GL_CALL* DebugMessageCallback)(GLDebugProc callback, const void* userParam) = nullptr;
+        void (PB_GL_CALL* GetIntegerv)(GLenum pname, GLint* data) = nullptr;
+        const GLubyte* (PB_GL_CALL* GetStringi)(GLenum name, GLuint index) = nullptr;
     };
 }

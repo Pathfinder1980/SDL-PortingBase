@@ -65,6 +65,10 @@ namespace porting_base
 
         PB_GL_LOAD(GetError);
 
+        DebugMessageCallback = reinterpret_cast<decltype(DebugMessageCallback)>(getProc("glDebugMessageCallback"));
+        PB_GL_LOAD(GetIntegerv);
+        PB_GL_LOAD(GetStringi);
+
         return true;
     }
 
