@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <array>
+#include <cstdint>
 #include <numbers>
 
 #include "renderer/Math.h"
@@ -55,11 +57,37 @@ namespace porting_base
         };
 
         constexpr float kFovYRadians = 60.0f * std::numbers::pi_v<float> / 180.0f;
+
+        constexpr std::array<std::uint8_t, 8 * 8 * 4> MakeCheckerTexture()
+        {
+            std::array<std::uint8_t, 8 * 8 * 4> texels {};
+            for (int y = 0; y < 8; ++y)
+            {
+                for (int x = 0; x < 8; ++x)
+                {
+                    const bool light = (x + y) % 2 == 0;
+                    const std::uint8_t value = light ? 0xE0 : 0x40;
+                    const int i = (y * 8 + x) * 4;
+                    texels[i + 0] = value;
+                    texels[i + 1] = value;
+                    texels[i + 2] = value;
+                    texels[i + 3] = 0xFF;
+                }
+            }
+            return texels;
+        }
+
+        constexpr std::array<std::uint8_t, 8 * 8 * 4> kCheckTexture { MakeCheckerTexture() };
     }
 
 
     Renderer::~Renderer()
     {
+        if (m_Tex != 0)
+        {
+            m_GLApi.DeleteTextures(1, &m_Tex);
+        }
+
         if (m_Ebo != 0)
         {
             m_GLApi.DeleteBuffers(1, &m_Ebo);
@@ -102,7 +130,11 @@ namespace porting_base
         if (!renderer->InitGeometry(errorMessage))
         {
             return nullptr;
-        }       
+        }
+        if (!renderer->InitTexture(errorMessage))
+        {
+            return nullptr;
+        }
 
         return renderer;
     }
@@ -133,6 +165,9 @@ namespace porting_base
 
         m_GLApi.UseProgram(m_Program);
         m_GLApi.UniformMatrix4fv(m_MvpLocation, 1, 0, mvp.m);
+        m_GLApi.Uniform1i(m_TexLocation, 0);
+        m_GLApi.ActiveTexture(GL_TEXTURE0);
+        m_GLApi.BindTexture(GL_TEXTURE_2D, m_Tex);
         m_GLApi.BindVertexArray(m_Vao);
         m_GLApi.DrawElements(GL_TRIANGLES, static_cast<GLsizei>(std::size(kCubeIndices)), GL_UNSIGNED_SHORT, nullptr);
     }    
@@ -195,6 +230,13 @@ namespace porting_base
             return false;            
         }
 
+        m_TexLocation = m_GLApi.GetUniformLocation(program, "uTexture");
+        if (m_TexLocation == -1)
+        {
+            outError = std::format("Failed to get UniformLocation uTexture");
+            return false;            
+        }
+
         return true;
     }
 
@@ -253,6 +295,9 @@ namespace porting_base
         m_GLApi.EnableVertexAttribArray(1);
         m_GLApi.VertexAttribPointer(1, 3, GL_FLOAT, 0, 8 * sizeof(float), reinterpret_cast<const void*>(3 * sizeof(float)));
 
+        m_GLApi.EnableVertexAttribArray(2);
+        m_GLApi.VertexAttribPointer(2, 2, GL_FLOAT, 0, 8 * sizeof(float), reinterpret_cast<const void*>(6 * sizeof(float)));
+
         const GLenum error = m_GLApi.GetError();
         if (error != 0)
         {
@@ -260,6 +305,27 @@ namespace porting_base
             return false;
         }
 
+        return true;
+    }
+
+    bool Renderer::InitTexture(std::string &outError)
+    {
+        m_GLApi.GenTextures(1, &m_Tex);
+        m_GLApi.BindTexture(GL_TEXTURE_2D, m_Tex);
+        m_GLApi.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, kCheckTexture.data());
+
+        m_GLApi.GenerateMipmap(GL_TEXTURE_2D);
+        m_GLApi.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+        m_GLApi.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        m_GLApi.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        m_GLApi.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        const GLenum error = m_GLApi.GetError();
+        if (error != 0)
+        {
+            outError = std::format("GL error during texture init: 0x{:X}", error);
+            return false;
+        }
         return true;
     }
 }

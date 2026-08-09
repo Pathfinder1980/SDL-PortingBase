@@ -41,6 +41,20 @@ namespace porting_base
     inline constexpr GLenum GL_UNSIGNED_SHORT       = 0x1403;
     inline constexpr GLenum GL_ELEMENT_ARRAY_BUFFER = 0x8893;
 
+    inline constexpr GLenum GL_TEXTURE_2D                = 0x0DE1;
+    inline constexpr GLenum GL_TEXTURE0                  = 0x84C0;
+    inline constexpr GLenum GL_RGBA                      = 0x1908;
+    inline constexpr GLint  GL_RGBA8                     = 0x8058;
+    inline constexpr GLenum GL_UNSIGNED_BYTE             = 0x1401;
+    inline constexpr GLenum GL_TEXTURE_MAG_FILTER        = 0x2800;
+    inline constexpr GLenum GL_TEXTURE_MIN_FILTER        = 0x2801;
+    inline constexpr GLint  GL_NEAREST                   = 0x2600;
+    inline constexpr GLint  GL_NEAREST_MIPMAP_LINEAR     = 0x2702;
+    inline constexpr GLenum GL_TEXTURE_WRAP_S            = 0x2802;
+    inline constexpr GLenum GL_TEXTURE_WRAP_T            = 0x2803;
+    inline constexpr GLint  GL_REPEAT                    = 0x2901;
+    inline constexpr GLenum GL_UNPACK_ALIGNMENT          = 0x0CF5;
+
     
     struct GLApi
     {
@@ -86,6 +100,18 @@ namespace porting_base
         void  (PB_GL_CALL* DrawElements)(GLenum mode, GLsizei count, GLenum type, const void* indices) = nullptr;
         GLint (PB_GL_CALL* GetUniformLocation)(GLuint program, const GLchar* name) = nullptr;
         void  (PB_GL_CALL* UniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value) = nullptr;
+
+        void (PB_GL_CALL* GenTextures)(GLsizei n, GLuint* textures) = nullptr;
+        void (PB_GL_CALL* BindTexture)(GLenum target, GLuint texture) = nullptr;
+        void (PB_GL_CALL* TexImage2D)(GLenum target, GLint level, GLint internalFormat,
+                                    GLsizei width, GLsizei height, GLint border,
+                                    GLenum format, GLenum type, const void* pixels) = nullptr;
+        void (PB_GL_CALL* TexParameteri)(GLenum target, GLenum pname, GLint param) = nullptr;
+        void (PB_GL_CALL* GenerateMipmap)(GLenum target) = nullptr;
+        void (PB_GL_CALL* ActiveTexture)(GLenum texture) = nullptr;
+        void (PB_GL_CALL* Uniform1i)(GLint location, GLint v0) = nullptr;
+        void (PB_GL_CALL* DeleteTextures)(GLsizei n, const GLuint* textures) = nullptr;
+        void (PB_GL_CALL* PixelStorei)(GLenum pname, GLint param) = nullptr;
 
         GLenum (PB_GL_CALL* GetError)() = nullptr;
     };

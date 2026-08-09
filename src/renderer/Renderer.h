@@ -28,14 +28,17 @@ namespace porting_base
         bool InitShaderProgram(const std::filesystem::path& shaderPath, std::string& outError);
         std::string LoadShaderSourceFile(const std::string& fileName, const std::filesystem::path& shaderPath, std::string& outError);
         GLuint CompileStage(GLenum type, const char* source, const std::string& label, std::string& outError);
-        bool InitGeometry(std::string& outError);    
+        bool InitGeometry(std::string& outError);
+        bool InitTexture(std::string& outError);
 
         std::string m_VersionString;
         GLint m_MvpLocation { -1 };
+        GLint m_TexLocation { -1 };
         GLuint m_Program { 0 };
         GLuint m_Vao { 0 };
         GLuint m_Vbo { 0 };
         GLuint m_Ebo { 0 };
+        GLuint m_Tex { 0 };
 
         GLApi m_GLApi;
     };

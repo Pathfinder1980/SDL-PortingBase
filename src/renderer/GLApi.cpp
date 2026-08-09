@@ -53,6 +53,16 @@ namespace porting_base
         PB_GL_LOAD(GetUniformLocation);
         PB_GL_LOAD(UniformMatrix4fv);
 
+        PB_GL_LOAD(GenTextures);
+        PB_GL_LOAD(BindTexture);
+        PB_GL_LOAD(TexImage2D);
+        PB_GL_LOAD(TexParameteri);
+        PB_GL_LOAD(GenerateMipmap);
+        PB_GL_LOAD(ActiveTexture);
+        PB_GL_LOAD(Uniform1i);
+        PB_GL_LOAD(DeleteTextures);
+        PB_GL_LOAD(PixelStorei);
+
         PB_GL_LOAD(GetError);
 
         return true;
