@@ -233,4 +233,9 @@ namespace porting_base
         }
         return pImpl->basePath;
     }
+
+    void Platform::GetDrawableSize(int& width, int& height) const
+    {
+        SDL_GL_GetDrawableSize(pImpl->window.get(), &width, &height);
+    }
 } // namespace porting_base

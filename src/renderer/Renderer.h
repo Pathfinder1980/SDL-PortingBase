@@ -20,7 +20,7 @@ namespace porting_base
         const std::string& GetVersionString() const;
         void Clear(float r, float g, float b, float a);
 
-        void Draw();
+        void Draw(int drawableWidth, int drawableHeight, float angleX, float angleY);
 
     private:
         Renderer() = default;
@@ -31,6 +31,7 @@ namespace porting_base
         bool InitGeometry(std::string& outError);    
 
         std::string m_VersionString;
+        GLint m_MvpLocation { -1 };
         GLuint m_Program { 0 };
         GLuint m_Vao { 0 };
         GLuint m_Vbo { 0 };

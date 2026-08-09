@@ -2,6 +2,7 @@ file(GLOB_RECURSE ASSET_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)
 
 set(ASSET_STAMP ${CMAKE_CURRENT_BINARY_DIR}/assets.stamp)
 add_custom_command(OUTPUT ${ASSET_STAMP}
+    COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:SDL2-PortingBase>/assets
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:SDL2-PortingBase>/assets
     COMMAND ${CMAKE_COMMAND} -E touch ${ASSET_STAMP}

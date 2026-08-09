@@ -36,6 +36,7 @@ namespace porting_base
         bool IsQuitRequested() const;
 
         const std::string& GetBasePath(std::string& errorMessage) const;
+        void GetDrawableSize(int& width, int& height) const;
 
     private:
         Platform();

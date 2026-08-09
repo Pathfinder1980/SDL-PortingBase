@@ -3,6 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <numbers>
+
+#include "renderer/Math.h"
 
 
 namespace porting_base
@@ -50,6 +53,8 @@ namespace porting_base
             16, 17, 18,  16, 18, 19,
             20, 21, 22,  20, 22, 23,
         };
+
+        constexpr float kFovYRadians = 60.0f * std::numbers::pi_v<float> / 180.0f;
     }
 
 
@@ -113,18 +118,28 @@ namespace porting_base
         m_GLApi.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    void Renderer::Draw()
+    void Renderer::Draw(int drawableWidth, int drawableHeight, float angleX, float angleY)
     {
+        const int w = drawableWidth  > 0 ? drawableWidth  : 1;
+        const int h = drawableHeight > 0 ? drawableHeight : 1;
+        m_GLApi.Viewport(0, 0, w, h);
+
+        const float aspect = static_cast<float>(w) / static_cast<float>(h);
+
+        const Mat4 model      = Mat4::RotateY(angleY) * Mat4::RotateX(angleX);
+        const Mat4 view       = Mat4::Translation(0.0f, 0.0f, -3.0f);
+        const Mat4 projection = Mat4::Perspective(kFovYRadians, aspect, 0.1f, 100.0f);
+        const Mat4 mvp        = projection * view * model;
+
         m_GLApi.UseProgram(m_Program);
+        m_GLApi.UniformMatrix4fv(m_MvpLocation, 1, 0, mvp.m);
         m_GLApi.BindVertexArray(m_Vao);
         m_GLApi.DrawElements(GL_TRIANGLES, static_cast<GLsizei>(std::size(kCubeIndices)), GL_UNSIGNED_SHORT, nullptr);
-    }
-
-    
+    }    
 
     bool Renderer::InitShaderProgram(const std::filesystem::path& shaderPath, std::string& outError)
     {
-        std::string vertexShaderLabel = "triangle.vert";
+        std::string vertexShaderLabel = "cube.vert";
         std::string vertexShaderSource = LoadShaderSourceFile(vertexShaderLabel, shaderPath, outError);
         if (vertexShaderSource.empty())
         {
@@ -136,7 +151,7 @@ namespace porting_base
             return false;
         }
 
-        std::string fragmentShaderLabel = "triangle.frag";
+        std::string fragmentShaderLabel = "cube.frag";
         std::string fragmentShaderSource = LoadShaderSourceFile(fragmentShaderLabel, shaderPath, outError);
         if (fragmentShaderSource.empty())
         {
@@ -172,6 +187,13 @@ namespace porting_base
         m_GLApi.DeleteShader(vertexShaderId);
         m_GLApi.DeleteShader(fragmentId);
         m_Program = program;
+
+        m_MvpLocation =  m_GLApi.GetUniformLocation(program, "uMVP");
+        if (m_MvpLocation == -1)
+        {
+            outError = std::format("Failed to get UniformLocation uMVP");
+            return false;            
+        }
 
         return true;
     }
@@ -227,6 +249,9 @@ namespace porting_base
 
         m_GLApi.EnableVertexAttribArray(0);
         m_GLApi.VertexAttribPointer(0, 3, GL_FLOAT, 0, 8 * sizeof(float), nullptr);
+
+        m_GLApi.EnableVertexAttribArray(1);
+        m_GLApi.VertexAttribPointer(1, 3, GL_FLOAT, 0, 8 * sizeof(float), reinterpret_cast<const void*>(3 * sizeof(float)));
 
         const GLenum error = m_GLApi.GetError();
         if (error != 0)

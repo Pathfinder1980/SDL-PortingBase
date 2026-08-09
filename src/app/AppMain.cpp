@@ -10,16 +10,28 @@
 #include <string>
 #include <random>
 #include <filesystem>
+#include <format>
+#include <algorithm>
+#include <cstdio>
 
 
 namespace porting_base{
-    constexpr const char* WINDOW_NAME = "SDL BasePortingFramework";
-    constexpr int WINDOW_SIZE_WIDTH = 640 ;
-    constexpr int WINDOW_SIZE_HEIGHT = 480;
     
+    namespace 
+    {        
+        constexpr const char* kWindowName = "SDL BasePortingFramework";
+        constexpr int kWindowWidth = 640 ;
+        constexpr int kWindowHeight = 480;
+        constexpr double kFixedStep = 1.0 / 60.0;
+        constexpr float kSpinSpeedX = 0.9f;
+        constexpr float kSpinSpeedY = 0.6f;
+    }
+    
+
+
     int AppMain([[maybe_unused]]int argc, [[maybe_unused]]char** argv)
     {
-        WindowConfig config { WINDOW_NAME, WINDOW_SIZE_WIDTH, WINDOW_SIZE_HEIGHT, true };
+        WindowConfig config { kWindowName, kWindowWidth, kWindowHeight, true };
         std::string errorMessage;
         auto platform = Platform::Create(config, errorMessage);
         if (!platform)
@@ -46,9 +58,10 @@ namespace porting_base{
         
         std::mt19937 rng { std::random_device { }() };
         float red { 0.09f }, green { 0.10f }, blue { 0.12f};
-        FrameTimer timer { 1.0 / 60.0, 0.25 };
+        FrameTimer timer { kFixedStep, 0.25 };
         
         double lastTime = platform->Now();
+        float angleX { 0.f}, angleY { 0.f };
         FrameStats stats;
         InputState previousInputState;
         while (platform->IsQuitRequested() == false)
@@ -67,7 +80,7 @@ namespace porting_base{
                 double frameMs = stats.GetAverageFrameTimeInMilliseconds();
                 float xAxis = currentInputState.axes[static_cast<int>(Axis::MoveX)];
                 float yAxis = currentInputState.axes[static_cast<int>(Axis::MoveY)];
-                platform->SetTitle(std::format("{} | {:.1f} fps / {:.2f} ms | Controller: {} , | ({:.2f}, {:.2f})" , WINDOW_NAME, fps, frameMs, currentInputState.controllerConnected, xAxis, yAxis));
+                platform->SetTitle(std::format("{} | {:.1f} fps / {:.2f} ms | Controller: {} , | ({:.2f}, {:.2f})" , kWindowName, fps, frameMs, currentInputState.controllerConnected, xAxis, yAxis));
                 stats.Reset();
             }
             
@@ -75,6 +88,8 @@ namespace porting_base{
             while (steps > 0)
             {
                 // Update game logic here
+                angleX += static_cast<float>(kSpinSpeedX * kFixedStep);
+                angleY += static_cast<float>(kSpinSpeedY * kFixedStep);
                 steps--;
             }
 
@@ -109,7 +124,9 @@ namespace porting_base{
 
 
             renderer->Clear(red, green, blue, 1.f);
-            renderer->Draw();
+            int width { 0 }, height { 0 };
+            platform->GetDrawableSize(width, height);
+            renderer->Draw(width, height, angleX, angleY);
             platform->SwapBuffers();
         }
         
