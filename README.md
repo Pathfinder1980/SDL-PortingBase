@@ -1,4 +1,4 @@
-# SDL2-PortingBase
+# SDL-PortingBase
 
 A personal learning project, built from scratch by hand: a minimal SDL2
 application with a thin platform layer and SDL-free logic underneath.
