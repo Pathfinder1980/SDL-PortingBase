@@ -1,4 +1,5 @@
 # SDL-PortingBase
+[![CI](https://github.com/Pathfinder1980/SDL-PortingBase/actions/workflows/ci.yml/badge.svg)](https://github.com/Pathfinder1980/SDL-PortingBase/actions/workflows/ci.yml)
 
 A personal learning project, built from scratch by hand: a minimal SDL2
 application with a thin platform layer and SDL-free logic underneath.
