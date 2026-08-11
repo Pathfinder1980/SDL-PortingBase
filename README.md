@@ -29,5 +29,16 @@ over more than exactly what the demo needs.
 
 ## Build
 
-CMake presets `windows-msvc-debug` / `windows-msvc-release` (Ninja,
-MSVC from a Native Tools prompt). Tests run via `ctest`.
+Builds and runs on Windows and Linux from the same clone. CMake presets
+with Ninja on both platforms; tests run via `ctest`.
+
+- **Windows:** `windows-msvc-debug` / `windows-msvc-release` — MSVC,
+  run from a Native Tools prompt.
+- **Linux:** `linux-gcc-debug` / `linux-gcc-release` — GCC 13+ and
+  CMake 3.24+ required. SDL2 is built from source via FetchContent, so
+  the usual X11/Wayland/audio dev packages must be installed — see
+  [SDL's Linux README](https://github.com/libsdl-org/SDL/blob/SDL2/docs/README-linux.md)
+  for the full list.
+
+Presets are host-filtered: `cmake --list-presets` only shows the ones
+that apply to your machine.
