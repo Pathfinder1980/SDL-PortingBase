@@ -9,9 +9,9 @@ application with a thin platform layer and SDL-free logic underneath.
   hand-rolled function loading (no GLAD/GLEW), explicit vertex layout,
   shaders, uniforms and the matrix math behind them — no engine doing
   the thinking for me.
-- **Real hands-on time with SDL2.** Window, GL context, main loop,
-  input and (soon) audio — driven through SDL's actual API, not a
-  wrapper found in a tutorial.
+- **Real hands-on time with SDL2.** Window, GL context, main loop and
+  input — driven through SDL's actual API, not a wrapper found in a
+  tutorial.
 - **Learn modern CMake.** Targets, presets, FetchContent, custom
   commands — and using linkage itself to enforce design decisions.
 
