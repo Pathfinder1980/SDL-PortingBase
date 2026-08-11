@@ -1,4 +1,4 @@
-name: CI
+name: Windows
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  windows:
+  build:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -36,35 +36,3 @@ jobs:
       # the GDI software GL 1.1 context, so a 3.3 core context cannot be
       # created. Linux could smoke-test via Mesa's llvmpipe once the app
       # learns a --frames auto-exit flag.
-
-  linux:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [debug, release]
-    steps:
-      - uses: actions/checkout@v4
-
-      # SDL2 builds from source (FetchContent), so its video/audio backend
-      # dev packages must exist before configuring.
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            ninja-build \
-            libasound2-dev libpulse-dev \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
-            libxfixes-dev libxi-dev libxss-dev libxkbcommon-dev \
-            libwayland-dev libdecor-0-dev \
-            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev \
-            libdbus-1-dev libudev-dev libdrm-dev libgbm-dev
-
-      - name: Configure
-        run: cmake --preset linux-gcc-${{ matrix.config }}
-
-      - name: Build
-        run: cmake --build --preset linux-gcc-${{ matrix.config }}
-
-      - name: Unit tests
-        run: ctest --preset linux-gcc-${{ matrix.config }}
